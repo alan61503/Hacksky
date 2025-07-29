@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fafafa;
+            color: #262626;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #dbdbdb;
+            z-index: 1000;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            max-width: 975px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #262626;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            color: #262626;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-icon:hover {
+            color: #8e8e8e;
+        }
+
+        .profile-pic {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 975px;
+            margin: 80px auto 0;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 32px;
+            padding: 0 20px;
+        }
+
+        /* Stories */
+        .stories {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .stories-container {
+            display: flex;
+            gap: 16px;
+        }
+
+        .story {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .story-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .story-username {
+            font-size: 12px;
+            color: #262626;
+            text-align: center;
+        }
+
+        /* Posts */
+        .post {
+            background: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+        }
+
+        .post-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .post-username {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .post-more {
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+
+        .post-actions {
+            padding: 8px 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .action-btn {
+            font-size: 24px;
+            color: #262626;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .action-btn:hover {
+            color: #8e8e8e;
+        }
+
+        .likes {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .caption {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .comments {
+            color: #8e8e8e;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .timestamp {
+            color: #8e8e8e;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .user-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .user-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color: #8e8e8e;
+        }
+
+        .switch-btn {
+            color: #0095f6;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .suggestions-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8e8e8e;
+        }
+
+        .see-all {
+            font-size: 12px;
+            font-weight: 600;
+            color: #262626;
+            cursor: pointer;
+        }
+
+        .suggestion {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .suggestion-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .suggestion-info {
+            flex: 1;
+        }
+
+        .suggestion-username {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .suggestion-followed {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+
+        .follow-btn {
+            color: #0095f6;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .header-content {
+                padding: 0 16px;
+            }
+
+            .nav-icons {
+                gap: 16px;
+            }
+
+            .stories {
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+
+            .post {
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+        }
+
+        /* Animations */
+        .action-btn.liked {
+            color: #ed4956;
+            animation: heartBeat 0.3s ease-in-out;
+        }
+
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Instagram</div>
+            <div class="nav-icons">
+                <i class="fas fa-home nav-icon"></i>
+                <i class="far fa-paper-plane nav-icon"></i>
+                <i class="far fa-plus-square nav-icon"></i>
+                <i class="far fa-compass nav-icon"></i>
+                <i class="far fa-heart nav-icon"></i>
+                <div class="profile-pic"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left Column - Posts -->
+        <div class="posts-column">
+            <!-- Stories -->
+            <div class="stories">
+                <div class="stories-container">
+                    <div class="story">
+                        <div class="story-avatar">👤</div>
+                        <div class="story-username">your_story</div>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">🌟</div>
+                        <div class="story-username">travel_lover</div>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">🎨</div>
+                        <div class="story-username">art_gallery</div>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">🍕</div>
+                        <div class="story-username">foodie_blog</div>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">🏃</div>
+                        <div class="story-username">fitness_goals</div>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">📚</div>
+                        <div class="story-username">book_worm</div>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">🎵</div>
+                        <div class="story-username">music_lover</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts -->
+            <div class="post">
+                <div class="post-header">
+                    <div class="post-user">
+                        <div class="post-avatar">🌟</div>
+                        <div class="post-username">travel_lover</div>
+                    </div>
+                    <i class="fas fa-ellipsis-h post-more"></i>
+                </div>
+                <div class="post-image">🏔️</div>
+                <div class="post-actions">
+                    <div class="action-buttons">
+                        <i class="far fa-heart action-btn" onclick="toggleLike(this)"></i>
+                        <i class="far fa-comment action-btn"></i>
+                        <i class="far fa-paper-plane action-btn"></i>
+                        <i class="far fa-bookmark action-btn" style="margin-left: auto;"></i>
+                    </div>
+                    <div class="likes">1,234 likes</div>
+                    <div class="caption">
+                        <strong>travel_lover</strong> Amazing sunset at the mountains! 🌅 #travel #nature #sunset
+                    </div>
+                    <div class="comments">View all 89 comments</div>
+                    <div class="timestamp">2 hours ago</div>
+                </div>
+            </div>
+
+            <div class="post">
+                <div class="post-header">
+                    <div class="post-user">
+                        <div class="post-avatar">🎨</div>
+                        <div class="post-username">art_gallery</div>
+                    </div>
+                    <i class="fas fa-ellipsis-h post-more"></i>
+                </div>
+                <div class="post-image">🎨</div>
+                <div class="post-actions">
+                    <div class="action-buttons">
+                        <i class="far fa-heart action-btn" onclick="toggleLike(this)"></i>
+                        <i class="far fa-comment action-btn"></i>
+                        <i class="far fa-paper-plane action-btn"></i>
+                        <i class="far fa-bookmark action-btn" style="margin-left: auto;"></i>
+                    </div>
+                    <div class="likes">2,567 likes</div>
+                    <div class="caption">
+                        <strong>art_gallery</strong> New abstract piece I've been working on! What do you think? 🎭 #art #abstract #creative
+                    </div>
+                    <div class="comments">View all 156 comments</div>
+                    <div class="timestamp">5 hours ago</div>
+                </div>
+            </div>
+
+            <div class="post">
+                <div class="post-header">
+                    <div class="post-user">
+                        <div class="post-avatar">🍕</div>
+                        <div class="post-username">foodie_blog</div>
+                    </div>
+                    <i class="fas fa-ellipsis-h post-more"></i>
+                </div>
+                <div class="post-image">🍕</div>
+                <div class="post-actions">
+                    <div class="action-buttons">
+                        <i class="far fa-heart action-btn" onclick="toggleLike(this)"></i>
+                        <i class="far fa-comment action-btn"></i>
+                        <i class="far fa-paper-plane action-btn"></i>
+                        <i class="far fa-bookmark action-btn" style="margin-left: auto;"></i>
+                    </div>
+                    <div class="likes">3,891 likes</div>
+                    <div class="caption">
+                        <strong>foodie_blog</strong> Homemade pizza night! 🍕🔥 This margherita turned out perfectly! #pizza #homemade #foodie
+                    </div>
+                    <div class="comments">View all 234 comments</div>
+                    <div class="timestamp">1 day ago</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Sidebar -->
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="user-avatar">👤</div>
+                <div class="user-info">
+                    <h3>your_username</h3>
+                    <p>Your Name</p>
+                </div>
+                <div class="switch-btn">Switch</div>
+            </div>
+
+            <div class="suggestions">
+                <div class="suggestions-header">
+                    <div class="suggestions-title">Suggestions For You</div>
+                    <div class="see-all">See All</div>
+                </div>
+
+                <div class="suggestion">
+                    <div class="suggestion-avatar">🏃</div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">fitness_goals</div>
+                        <div class="suggestion-followed">Followed by user123</div>
+                    </div>
+                    <div class="follow-btn">Follow</div>
+                </div>
+
+                <div class="suggestion">
+                    <div class="suggestion-avatar">📚</div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">book_worm</div>
+                        <div class="suggestion-followed">New to Instagram</div>
+                    </div>
+                    <div class="follow-btn">Follow</div>
+                </div>
+
+                <div class="suggestion">
+                    <div class="suggestion-avatar">🎵</div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">music_lover</div>
+                        <div class="suggestion-followed">Followed by user456</div>
+                    </div>
+                    <div class="follow-btn">Follow</div>
+                </div>
+
+                <div class="suggestion">
+                    <div class="suggestion-avatar">📸</div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">photography_pro</div>
+                        <div class="suggestion-followed">Followed by user789</div>
+                    </div>
+                    <div class="follow-btn">Follow</div>
+                </div>
+
+                <div class="suggestion">
+                    <div class="suggestion-avatar">🌿</div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">plant_parent</div>
+                        <div class="suggestion-followed">New to Instagram</div>
+                    </div>
+                    <div class="follow-btn">Follow</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleLike(button) {
+            button.classList.toggle('liked');
+            if (button.classList.contains('liked')) {
+                button.classList.remove('far');
+                button.classList.add('fas');
+            } else {
+                button.classList.remove('fas');
+                button.classList.add('far');
+            }
+        }
+
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make stories clickable
+            const stories = document.querySelectorAll('.story');
+            stories.forEach(story => {
+                story.addEventListener('click', function() {
+                    alert('Story clicked! This would open the story viewer.');
+                });
+            });
+
+            // Make follow buttons clickable
+            const followButtons = document.querySelectorAll('.follow-btn');
+            followButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (this.textContent === 'Follow') {
+                        this.textContent = 'Following';
+                        this.style.color = '#262626';
+                    } else {
+                        this.textContent = 'Follow';
+                        this.style.color = '#0095f6';
+                    }
+                });
+            });
+
+            // Make action buttons interactive
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(button => {
+                if (!button.classList.contains('fa-heart')) {
+                    button.addEventListener('click', function() {
+                        alert('Action clicked! This would perform the respective action.');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
