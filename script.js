@@ -12,6 +12,9 @@ let suggestions = [];
 let currentPage = 0;
 let isLoading = false;
 
+// Backend API configuration
+const API_BASE_URL = 'http://localhost:8000';
+
 // Sample data
 const avatarImages = [
     'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=56&h=56&fit=crop&crop=face',
@@ -174,7 +177,7 @@ function renderPosts() {
                     <i class="${post.saved ? 'fas' : 'far'} fa-bookmark action-btn" style="margin-left: auto;" onclick="toggleSave(${post.id})"></i>
                 </div>
                 <div class="likes" onclick="viewPostDetail(${post.id})">${formatNumber(post.likes)} likes</div>
-                <div class="caption">
+                <div class="caption post-caption">
                     <strong>${post.user.username}</strong> ${post.caption}
                 </div>
                 <div class="comments" onclick="viewPostDetail(${post.id})">View all ${post.comments} comments</div>
@@ -182,6 +185,16 @@ function renderPosts() {
             </div>
         </div>
     `).join('');
+    
+    // Analyze posts for misinformation after rendering
+    posts.forEach(post => {
+        if (post.caption && post.caption.trim() !== '') {
+            // Add a small delay to avoid overwhelming the API
+            setTimeout(() => {
+                analyzePostCaption(post.id, post.caption);
+            }, Math.random() * 2000); // Random delay between 0-2 seconds
+        }
+    });
 }
 
 // Suggestions functionality
@@ -363,11 +376,30 @@ function handleImageUpload(event) {
     }
 }
 
-function createPost() {
+async function createPost() {
     const caption = document.getElementById('postCaption').value;
     const previewImage = document.getElementById('previewImage').src;
     
     if (previewImage && caption.trim()) {
+        // Analyze the caption for misinformation before posting
+        if (caption.trim() !== '') {
+            showNotification('Analyzing content for misinformation...');
+            const analysis = await analyzeContentForMisinformation(caption, 'text');
+            
+            if (analysis.success) {
+                const trustScore = analysis.trust_score;
+                const reason = analysis.reason;
+                
+                // Show analysis result
+                let alertMessage = `Content Analysis: ${trustScore}% trust score`;
+                if (trustScore < 40) {
+                    alertMessage += ' - ⚠️ This content may contain misinformation!';
+                }
+                
+                showNotification(alertMessage);
+            }
+        }
+        
         const newPost = {
             id: Date.now(),
             user: currentUser,
@@ -470,6 +502,100 @@ function formatTimestamp(date) {
         return `${hours} hours ago`;
     } else {
         return `${days} days ago`;
+    }
+}
+
+// Misinformation detection functions
+async function analyzeContentForMisinformation(content, contentType = 'text') {
+    try {
+        const formData = new FormData();
+        formData.append('content', content);
+        formData.append('content_type', contentType);
+        
+        const response = await fetch(`${API_BASE_URL}/analyze`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error analyzing content:', error);
+        return {
+            success: false,
+            error: 'Failed to analyze content'
+        };
+    }
+}
+
+function getTrustScoreColor(trustScore) {
+    if (trustScore >= 80) return '#28a745'; // Green for high trust
+    if (trustScore >= 60) return '#ffc107'; // Yellow for medium trust
+    if (trustScore >= 40) return '#fd7e14'; // Orange for low trust
+    return '#dc3545'; // Red for very low trust
+}
+
+function getTrustScoreIcon(trustScore) {
+    if (trustScore >= 80) return '✅';
+    if (trustScore >= 60) return '⚠️';
+    if (trustScore >= 40) return '❓';
+    return '🚨';
+}
+
+function showMisinformationAlert(postId, trustScore, reason) {
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (!postElement) return;
+    
+    // Remove existing alert if any
+    const existingAlert = postElement.querySelector('.misinformation-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'misinformation-alert';
+    alertDiv.style.cssText = `
+        background: ${getTrustScoreColor(trustScore)}20;
+        border: 1px solid ${getTrustScoreColor(trustScore)};
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 12px;
+        color: ${getTrustScoreColor(trustScore)};
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    
+    alertDiv.innerHTML = `
+        <span style="font-size: 14px;">${getTrustScoreIcon(trustScore)}</span>
+        <span><strong>Trust Score: ${trustScore}%</strong></span>
+        <span>${reason}</span>
+    `;
+    
+    // Insert after the caption
+    const captionElement = postElement.querySelector('.post-caption');
+    if (captionElement) {
+        captionElement.parentNode.insertBefore(alertDiv, captionElement.nextSibling);
+    }
+}
+
+async function analyzePostCaption(postId, caption) {
+    if (!caption || caption.trim() === '') return;
+    
+    console.log(`Analyzing post ${postId} caption for misinformation...`);
+    
+    const result = await analyzeContentForMisinformation(caption, 'text');
+    
+    if (result.success) {
+        showMisinformationAlert(postId, result.trust_score, result.reason);
+        console.log(`Analysis complete for post ${postId}: ${result.trust_score}% trust score`);
+    } else {
+        console.error(`Analysis failed for post ${postId}:`, result.error);
     }
 }
 

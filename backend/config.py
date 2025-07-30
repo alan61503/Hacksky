@@ -7,8 +7,7 @@ class Settings(BaseSettings):
     Environment variables can override these defaults.
     """
 
-    # Agent Configuration
-    AGENT_LOOP_INTERVAL: float = 2.0  # seconds between posts
+    # Debug Configuration
     DEBUG: bool = True                # enable or disable debug logs
 
     # API Configuration
@@ -26,15 +25,6 @@ class Settings(BaseSettings):
     # Content Types
     SUPPORTED_CONTENT_TYPES: List[str] = ["text", "image", "video", "audio"]
 
-    # Fake Feed Settings
-    FAKE_POST_TEMPLATES: List[str] = [
-        "Breaking: {topic} causes major disruption in {location}",
-        "Scientists discover {discovery} that could change {field}",
-        "Local {authority} confirms {event} in {location}",
-        "New study shows {claim} affects {demographic}",
-        "Exclusive: {celebrity} spotted doing {activity} in {location}"
-    ]
-
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -43,7 +33,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Export commonly used settings for easier imports
-AGENT_INTERVAL = settings.AGENT_LOOP_INTERVAL
 DEBUG = settings.DEBUG
 API_HOST = settings.API_HOST
 API_PORT = settings.API_PORT

@@ -1,35 +1,30 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 import asyncio
+import time
 
 from backend.agent import AutonomousAgent
-from backend.logs.logger import log_system_event, get_logs, get_logs_summary
-from backend.config import AGENT_INTERVAL, DEBUG, API_HOST, API_PORT
+from backend.logs.logger import log_system_event, get_logs, get_logs_summary, get_logs_by_trust_range
+from backend.config import DEBUG, API_HOST, API_PORT
 
 agent_instance = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Manage application lifespan: start agent on startup, stop on shutdown.
+    Manage application lifespan: initialize agent on startup, cleanup on shutdown.
     """
     global agent_instance
     log_system_event("STARTUP", "Initializing autonomous AI agent...")
     agent_instance = AutonomousAgent()
-    agent_task = asyncio.create_task(agent_instance.start())
-    log_system_event("STARTUP", "🚀 Autonomous AI agent started successfully")
+    log_system_event("STARTUP", "🚀 Autonomous AI agent initialized successfully")
     try:
         yield
     finally:
         if agent_instance:
-            await agent_instance.stop()
-            agent_task.cancel()
-            try:
-                await agent_task
-            except asyncio.CancelledError:
-                pass
-        log_system_event("SHUTDOWN", "🛑 Autonomous AI agent stopped")
+            log_system_event("SHUTDOWN", "🛑 Autonomous AI agent stopped")
 
 app = FastAPI(
     title="Autonomous AI Misinformation Detection Engine",
@@ -46,21 +41,56 @@ async def root():
     return {
         "message": "Autonomous AI Misinformation Detection Engine",
         "status": "running",
-        "agent_active": agent_instance.is_running if agent_instance else False,
+        "agent_active": agent_instance is not None,
         "debug_mode": DEBUG
     }
 
+@app.post("/analyze")
+async def analyze_content(content: str = Form(...), content_type: str = Form("text")):
+    """
+    Analyze content sent from frontend and return trust score and classification.
+    """
+    if not agent_instance:
+        return {"error": "Agent not initialized"}
+    
+    try:
+        result = agent_instance.analyze_content(content, content_type)
+        return {
+            "success": True,
+            "post_id": result["post_id"],
+            "trust_score": result["trust_score"],
+            "reason": result["reason"],
+            "timestamp": result["timestamp"]
+        }
+    except Exception as e:
+        log_system_event("ANALYSIS_ERROR", f"❌ Error analyzing content: {str(e)}")
+        return {"error": f"Analysis failed: {str(e)}"}
+
 @app.get("/logs")
-async def get_logs_endpoint():
+async def get_detection_logs(limit: int = 20):
     """
-    Retrieve recent detection logs and summary.
+    Get recent detection logs for monitoring.
     """
-    logs = get_logs(limit=20)
+    logs = get_logs(limit=limit)
     summary = get_logs_summary()
+    
     return {
-        "logs": logs,
+        "recent_logs": logs,
         "summary": summary,
-        "total_returned": len(logs)
+        "total_logs_retrieved": len(logs)
+    }
+
+@app.get("/logs/low-trust")
+async def get_low_trust_logs(limit: int = 10):
+    """
+    Get logs with low trust scores (potential misinformation).
+    """
+    logs = get_logs_by_trust_range(min_trust=0, max_trust=30, limit=limit)
+    
+    return {
+        "low_trust_logs": logs,
+        "total_low_trust": len(logs),
+        "threshold": "0-30% trust score"
     }
 
 @app.get("/status")
@@ -69,11 +99,9 @@ async def get_status():
     Return current status of the autonomous agent and system health.
     """
     return {
-        "agent_running": agent_instance.is_running if agent_instance else False,
+        "agent_running": agent_instance is not None,
         "posts_processed": agent_instance.posts_processed if agent_instance else 0,
-        "uptime_seconds": agent_instance.get_uptime() if agent_instance else 0,
-        "system_status": "healthy",
-        "agent_interval": AGENT_INTERVAL
+        "system_status": "healthy"
     }
 
 if __name__ == "__main__":

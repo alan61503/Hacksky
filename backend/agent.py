@@ -1,4 +1,4 @@
-# backend/agent.py - Fixed for backend/ directory structure
+# backend/agent.py - Updated for frontend-driven analysis
 
 import asyncio
 import time
@@ -8,80 +8,60 @@ from typing import Optional
 from backend.feed.fake_feed import generate_fake_post
 from backend.detection.pipeline import analyze_post
 from backend.logs.logger import log_detection, log_system_event
-from backend.config import AGENT_INTERVAL, DEBUG
+from backend.config import DEBUG
 
 class AutonomousAgent:
     """
-    Autonomous AI agent that continuously monitors and analyzes content
-    for misinformation detection in real-time.
+    AI agent that analyzes content for misinformation detection.
+    Now processes content sent from frontend instead of generating fake posts.
     """
     
     def __init__(self):
-        """Initialize the autonomous agent with required components."""
-        self.is_running = False
+        """Initialize the agent with required components."""
         self.posts_processed = 0
-        self.start_time: Optional[float] = None
-        self._stop_event = asyncio.Event()
+        self._post_id_counter = 1
     
-    async def start(self):
+    def analyze_content(self, content: str, content_type: str = "text") -> dict:
         """
-        Start the autonomous agent loop. Generates fake posts every AGENT_INTERVAL seconds
-        and processes them through the detection pipeline.
-        """
-        self.is_running = True
-        self.start_time = time.time()
-        log_system_event("AGENT", "🤖 Autonomous agent started - beginning content analysis")
+        Analyze content sent from frontend and return detection results.
         
-        try:
-            while not self._stop_event.is_set():
-                try:
-                    # Generate a fake post
-                    fake_post = generate_fake_post()
-                    
-                    if DEBUG:
-                        content_preview = fake_post['content'][:50] + "..." if len(fake_post['content']) > 50 else fake_post['content']
-                        log_system_event("AGENT", f"📝 Generated post #{fake_post['id']}: {content_preview}")
-                    
-                    # Process through detection pipeline
-                    detection_result = analyze_post(fake_post)
-                    
-                    # Log the detection result
-                    log_detection(detection_result)
-                    
-                    self.posts_processed += 1
-                    
-                    # Wait for the configured interval
-                    try:
-                        await asyncio.wait_for(
-                            self._stop_event.wait(), 
-                            timeout=AGENT_INTERVAL
-                        )
-                        break  # Stop event was set
-                    except asyncio.TimeoutError:
-                        continue  # Continue the loop
-                        
-                except Exception as e:
-                    log_system_event("AGENT_ERROR", f"❌ Error in agent loop: {str(e)}")
-                    await asyncio.sleep(1)  # Brief pause before retrying
-                    
-        except asyncio.CancelledError:
-            log_system_event("AGENT", "🛑 Agent loop cancelled")
-        finally:
-            self.is_running = False
-    
-    async def stop(self):
-        """Gracefully stop the autonomous agent loop."""
-        log_system_event("AGENT", "⏹️ Stopping autonomous agent...")
-        self._stop_event.set()
-        self.is_running = False
-    
-    def get_uptime(self) -> float:
-        """
-        Get the agent uptime in seconds.
-        
+        Args:
+            content (str): The content to analyze
+            content_type (str): Type of content (text, audio, video, image)
+            
         Returns:
-            float: Uptime in seconds, or 0 if not started
+            dict: Analysis result with post_id, trust_score, reason, and timestamp
         """
-        if self.start_time:
-            return time.time() - self.start_time
-        return 0.0
+        # Create a post object for the detection pipeline
+        post = {
+            "id": self._post_id_counter,
+            "author": "frontend_user",
+            "content_type": content_type,
+            "language": "en",  # Default to English
+            "content": content,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())
+        }
+        
+        # Increment counter for next post
+        self._post_id_counter += 1
+        
+        # Process through detection pipeline
+        detection_result = analyze_post(post)
+        
+        # Log the detection result
+        log_detection(detection_result)
+        
+        self.posts_processed += 1
+        
+        if DEBUG:
+            content_preview = content[:50] + "..." if len(content) > 50 else content
+            log_system_event("ANALYSIS", f"📝 Analyzed content: {content_preview}")
+        
+        return detection_result
+
+if __name__ == "__main__":
+    # Test the agent
+    agent = AutonomousAgent()
+    test_content = "This is a test message to verify the detection pipeline works."
+    result = agent.analyze_content(test_content, "text")
+    print(f"Test result: {result}")

@@ -757,4 +757,83 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+/* Misinformation Detection Styles */
+.misinformation-alert {
+    animation: slideInAlert 0.3s ease-out;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+@keyframes slideInAlert {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.misinformation-alert span:first-child {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.misinformation-alert span:nth-child(2) {
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.misinformation-alert span:last-child {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Trust score colors */
+.trust-high {
+    background: #d4edda20;
+    border: 1px solid #28a745;
+    color: #155724;
+}
+
+.trust-medium {
+    background: #fff3cd20;
+    border: 1px solid #ffc107;
+    color: #856404;
+}
+
+.trust-low {
+    background: #f8d7da20;
+    border: 1px solid #dc3545;
+    color: #721c24;
+}
+
+.trust-very-low {
+    background: #f8d7da20;
+    border: 1px solid #dc3545;
+    color: #721c24;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
 } 
