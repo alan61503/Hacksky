@@ -5,10 +5,10 @@ import time
 from typing import Optional
 
 # Fixed imports for backend/ directory
-from backend.feed.fake_feed import generate_fake_post
-from backend.detection.pipeline import analyze_post
-from backend.logs.logger import log_detection, log_system_event
-from backend.config import settings
+from feed.fake_feed import generate_fake_post
+from detection.pipeline import analyze_post
+from logs.logger import log_detection, log_system_event
+from config import AGENT_INTERVAL, DEBUG
 
 class AutonomousAgent:
     """

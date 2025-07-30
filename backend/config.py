@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     AGENT_LOOP_INTERVAL: float = 2.0  # seconds between posts
     DEBUG: bool = True                # enable or disable debug logs
 
+    # API Configuration
+    API_HOST: str = "0.0.0.0"
+    API_PORT: int = 8000
+
     # Detection Pipeline Settings
     MIN_TRUST_SCORE: float = 0.5
     MAX_TRUST_SCORE: float = 1.0
@@ -37,3 +41,9 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+
+# Export commonly used settings for easier imports
+AGENT_INTERVAL = settings.AGENT_LOOP_INTERVAL
+DEBUG = settings.DEBUG
+API_HOST = settings.API_HOST
+API_PORT = settings.API_PORT

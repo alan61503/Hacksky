@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import asyncio
 
-from backend.agent import AutonomousAgent
-from backend.logs.logger import log_system_event, get_logs, get_logs_summary
-from backend.config import AGENT_INTERVAL, DEBUG, API_HOST, API_PORT
+from agent import AutonomousAgent
+from logs.logger import log_system_event, get_logs, get_logs_summary
+from config import AGENT_INTERVAL, DEBUG, API_HOST, API_PORT
 
 agent_instance = None
 
@@ -78,4 +78,9 @@ async def get_status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=API_HOST, port=API_PORT, reload=DEBUG)
+    print("🚀 Starting Autonomous AI Misinformation Detection Engine")
+    print(f"📍 Host: {API_HOST}")
+    print(f"🔌 Port: {API_PORT}")
+    print(f"🐛 Debug: {DEBUG}")
+    print("=" * 60)
+    uvicorn.run("main:app", host=API_HOST, port=API_PORT, reload=DEBUG)
