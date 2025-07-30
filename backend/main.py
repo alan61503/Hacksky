@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import asyncio
 
-from agent import AutonomousAgent
-from logs.logger import log_system_event, get_logs, get_logs_summary
-from config import AGENT_INTERVAL, DEBUG, API_HOST, API_PORT
+from backend.agent import AutonomousAgent
+from backend.logs.logger import log_system_event, get_logs, get_logs_summary
+from backend.config import AGENT_INTERVAL, DEBUG, API_HOST, API_PORT
 
 agent_instance = None
 
