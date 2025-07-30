@@ -8,7 +8,7 @@ from typing import Optional
 from backend.feed.fake_feed import generate_fake_post
 from backend.detection.pipeline import analyze_post
 from backend.logs.logger import log_detection, log_system_event
-from backend.config import AGENT_INTERVAL, DEBUG
+from backend.config import settings
 
 class AutonomousAgent:
     """
