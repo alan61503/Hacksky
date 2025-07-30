@@ -7,4 +7,9 @@ python-dotenv==1.0.0
 aiofiles==23.2.1
 httpx==0.25.2
 pytest==7.4.3
-pytest-asyncio==0.21.1 
+pytest-asyncio==0.21.1
+
+# AI/ML Dependencies for Hugging Face
+transformers>=4.30.0
+torch>=2.0.0
+accelerate>=0.20.0 

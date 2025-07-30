@@ -1,24 +1,27 @@
 # detection/pipeline.py
 """
 Detection pipeline for analyzing posts and generating trust scores.
-This is a placeholder implementation that will be replaced with real ML models
-including Whisper (audio), CLIP (images/video), text embeddings, and SHAP explanations.
+Now integrates with Hugging Face models for real misinformation detection.
 """
 
 import random
 import datetime
 from typing import Dict
 
+# Import the new Hugging Face detector
+try:
+    from backend.detection.huggingface_detector import analyze_text_with_huggingface
+    HUGGINGFACE_AVAILABLE = True
+except ImportError:
+    HUGGINGFACE_AVAILABLE = False
+    print("⚠️ Hugging Face detector not available. Using fallback analysis.")
+
 def analyze_post(post: Dict) -> Dict:
     """
     Analyze a post and generate a trust score with reasoning.
     
-    This is a placeholder function that generates random trust scores.
-    In production, this will integrate:
-    - Whisper for audio transcription and analysis
-    - CLIP for image/video content analysis  
-    - Text embeddings for semantic analysis
-    - SHAP for explainable AI insights
+    Now uses Hugging Face zero-shot classification for real misinformation detection.
+    Falls back to placeholder analysis if Hugging Face is not available.
     
     Args:
         post (Dict): Post dictionary containing id, content, content_type, etc.
@@ -27,13 +30,35 @@ def analyze_post(post: Dict) -> Dict:
         Dict: Analysis result with post_id, trust_score, reason, and timestamp
     """
     
-    # Generate random trust score between 0-100
-    trust_score = random.randint(0, 100)
+    content = post.get("content", "")
+    content_type = post.get("content_type", "text")
     
-    # Generate reason based on content type and trust score
+    # Use Hugging Face detector if available
+    if HUGGINGFACE_AVAILABLE and content_type == "text":
+        try:
+            # Analyze with Hugging Face model
+            analysis = analyze_text_with_huggingface(content)
+            
+            # Create result with Hugging Face analysis
+            result = {
+                "post_id": post["id"],
+                "trust_score": analysis["trust_score"],
+                "reason": analysis["reason"],
+                "classification": analysis["classification"],
+                "confidence": analysis["confidence"],
+                "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+            }
+            
+            return result
+            
+        except Exception as e:
+            print(f"❌ Hugging Face analysis failed: {e}")
+            # Fall back to placeholder analysis
+    
+    # Fallback to placeholder analysis
+    trust_score = random.randint(0, 100)
     reason = _generate_reason(post, trust_score)
     
-    # Create analysis result
     result = {
         "post_id": post["id"],
         "trust_score": trust_score,
