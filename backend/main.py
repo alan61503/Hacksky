@@ -1,9 +1,12 @@
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 import asyncio
 import time
+import os
+import tempfile
+import shutil
 
 from backend.agent import AutonomousAgent
 from backend.logs.logger import log_system_event, get_logs, get_logs_summary, get_logs_by_trust_range
@@ -65,6 +68,92 @@ async def analyze_content(content: str = Form(...), content_type: str = Form("te
     except Exception as e:
         log_system_event("ANALYSIS_ERROR", f"❌ Error analyzing content: {str(e)}")
         return {"error": f"Analysis failed: {str(e)}"}
+
+@app.post("/detect-cross-modal")
+async def detect_cross_modal(
+    text: str = Form(...),
+    image: UploadFile = File(None),
+    audio: UploadFile = File(None)
+):
+    """
+    Analyze content with cross-modal inconsistency detection.
+    Accepts text, image, and audio files for comprehensive analysis.
+    """
+    if not agent_instance:
+        return {"error": "Agent not initialized"}
+    
+    try:
+        # Create temporary files for uploaded content
+        temp_files = []
+        image_path = None
+        audio_path = None
+        
+        # Save image file if provided
+        if image:
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=f".{image.filename.split('.')[-1]}")
+            shutil.copyfileobj(image.file, temp_image)
+            temp_image.close()
+            image_path = temp_image.name
+            temp_files.append(image_path)
+        
+        # Save audio file if provided
+        if audio:
+            temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=f".{audio.filename.split('.')[-1]}")
+            shutil.copyfileobj(audio.file, temp_audio)
+            temp_audio.close()
+            audio_path = temp_audio.name
+            temp_files.append(audio_path)
+        
+        try:
+            # Import the cross-modal analysis function
+            from backend.detection.pipeline import analyze_post_with_cross_modal
+            
+            # Create post object
+            post = {
+                "id": agent_instance._post_id_counter,
+                "author": "frontend_user",
+                "content_type": "multimodal",
+                "language": "en",
+                "content": text,
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())
+            }
+            
+            # Analyze with cross-modal detection
+            result = analyze_post_with_cross_modal(post, image_path, audio_path)
+            
+            # Increment counter
+            agent_instance._post_id_counter += 1
+            agent_instance.posts_processed += 1
+            
+            # Log the detection result
+            from backend.logs.logger import log_detection
+            log_detection(result)
+            
+            if DEBUG:
+                log_system_event("CROSS_MODAL_ANALYSIS", f"📊 Cross-modal analysis completed for text: {text[:50]}...")
+            
+            return {
+                "success": True,
+                "post_id": result["post_id"],
+                "trust_score": result["trust_score"],
+                "reason": result.get("reason", "Cross-modal analysis completed"),
+                "timestamp": result["timestamp"],
+                "cross_modal_consistency": result.get("cross_modal_consistency", "unknown"),
+                "similarity_scores": result.get("similarity_scores", {}),
+                "cross_modal_details": result.get("cross_modal_analysis", {})
+            }
+            
+        finally:
+            # Clean up temporary files
+            for temp_file in temp_files:
+                try:
+                    os.unlink(temp_file)
+                except:
+                    pass
+    
+    except Exception as e:
+        log_system_event("CROSS_MODAL_ERROR", f"❌ Error in cross-modal analysis: {str(e)}")
+        return {"error": f"Cross-modal analysis failed: {str(e)}"}
 
 @app.get("/logs")
 async def get_detection_logs(limit: int = 20):

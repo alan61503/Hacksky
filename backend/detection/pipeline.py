@@ -16,6 +16,14 @@ except ImportError:
     HUGGINGFACE_AVAILABLE = False
     print("⚠️ Hugging Face detector not available. Using fallback analysis.")
 
+# Import cross-modal detector
+try:
+    from backend.detection.cross_modal_detector import CrossModalDetector
+    CROSS_MODAL_AVAILABLE = True
+except ImportError:
+    CROSS_MODAL_AVAILABLE = False
+    print("⚠️ Cross-modal detector not available. Skipping cross-modal analysis.")
+
 def analyze_post(post: Dict) -> Dict:
     """
     Analyze a post and generate a trust score with reasoning.
@@ -67,6 +75,68 @@ def analyze_post(post: Dict) -> Dict:
     }
     
     return result
+
+def analyze_post_with_cross_modal(post: Dict, image_path: str = None, audio_path: str = None) -> Dict:
+    """
+    Analyze a post with cross-modal consistency detection.
+    
+    Args:
+        post (Dict): Post dictionary containing id, content, content_type, etc.
+        image_path (str, optional): Path to image file for cross-modal analysis
+        audio_path (str, optional): Path to audio file for cross-modal analysis
+        
+    Returns:
+        Dict: Analysis result with cross-modal consistency scores
+    """
+    
+    # First, get the basic analysis
+    basic_result = analyze_post(post)
+    
+    # Add cross-modal analysis if available
+    if CROSS_MODAL_AVAILABLE and (image_path or audio_path):
+        try:
+            cross_modal_detector = CrossModalDetector()
+            cross_modal_result = cross_modal_detector.analyze(
+                text=post.get("content", ""),
+                image_path=image_path,
+                audio_path=audio_path
+            )
+            
+            # Combine results
+            combined_trust_score = _calculate_combined_trust_score(
+                basic_result["trust_score"],
+                cross_modal_result["overall_trust_score"]
+            )
+            
+            # Update the result with cross-modal information
+            basic_result.update({
+                "cross_modal_analysis": cross_modal_result,
+                "trust_score": combined_trust_score,
+                "cross_modal_consistency": cross_modal_result["consistency_assessment"],
+                "similarity_scores": cross_modal_result["similarity_scores"]
+            })
+            
+        except Exception as e:
+            print(f"❌ Cross-modal analysis failed: {e}")
+            # Continue with basic analysis only
+    
+    return basic_result
+
+def _calculate_combined_trust_score(text_trust: int, cross_modal_trust: int) -> int:
+    """
+    Calculate combined trust score from text analysis and cross-modal analysis.
+    
+    Args:
+        text_trust (int): Trust score from text analysis (0-100)
+        cross_modal_trust (int): Trust score from cross-modal analysis (0-100)
+        
+    Returns:
+        int: Combined trust score (0-100)
+    """
+    # Weight cross-modal analysis more heavily if it's available
+    # 40% text analysis + 60% cross-modal analysis
+    combined_score = (text_trust * 0.4) + (cross_modal_trust * 0.6)
+    return int(combined_score)
 
 def _generate_reason(post: Dict, trust_score: int) -> str:
     """

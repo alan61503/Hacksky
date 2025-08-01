@@ -12,4 +12,9 @@ pytest-asyncio==0.21.1
 # AI/ML Dependencies for Hugging Face
 transformers>=4.30.0
 torch>=2.0.0
-accelerate>=0.20.0 
+accelerate>=0.20.0
+
+# Cross-modal detection dependencies
+Pillow>=9.0.0
+numpy>=1.21.0
+openai-whisper>=20231117 
