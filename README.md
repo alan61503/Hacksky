@@ -56,20 +56,27 @@ A modern Instagram-like social media platform with integrated AI-powered misinfo
    pip install -r requirements.txt
    ```
 
-3. **Start the backend server**
+3. **Start the application (Recommended)**
    ```bash
+   python start.py
+   ```
+   This will start both backend and frontend servers automatically.
+
+   **Or start manually:**
+   ```bash
+   # Start backend
+   cd backend
    python run.py
-   # or
-   python -m uvicorn backend.main:app --reload
+   
+   # Start frontend (in new terminal)
+   cd frontend
+   python -m http.server 8080
    ```
 
-4. **Open the frontend**
-   - Open `index.html` in your web browser
-   - Or serve it using a local server:
-     ```bash
-     python -m http.server 8080
-     # Then visit http://localhost:8080
-     ```
+4. **Access the application**
+   - Frontend: http://localhost:8080
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
 
 5. **Test the system**
    - Create posts with various content types
